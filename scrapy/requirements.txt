@@ -1,0 +1,2 @@
+Scrapy<3
+ipython<9

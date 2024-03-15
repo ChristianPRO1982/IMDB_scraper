@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "b_main",
+    "b_scrapyScrapy<3",
 ]
 
 MIDDLEWARE = [
