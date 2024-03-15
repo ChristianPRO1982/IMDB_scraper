@@ -59,13 +59,29 @@ class MyImdbSpider(scrapy.Spider):
         for li in lis:
             directors.append(li.css('a::text').get())
         # Scénaristes
-        writers = 'writers'
+        li = response.css('li:contains("Scénario")')
+        uls = li.css('ul')
+        lis = uls[0].css('li')
+        writers = []
+        for li in lis:
+            writers.append(li.css('a::text').get())
         # Acteurs(Casting principal)
-        stars = 'stars'
+        li = response.css('li:contains("Casting principal")')
+        uls = li.css('ul')
+        lis = uls[0].css('li')
+        stars = []
+        for li in lis:
+            stars.append(li.css('a::text').get())
         # Pays
-        country = 'country'
+        li = response.css('li:contains("Pays d’origine")')
+        lis = li.css('div ul li')
+        li = lis[0]
+        country = li.css('a::text').get()
         # Langue d’origine
-        original_language = 'original_language'
+        li = response.css('li:contains("Langue")')
+        lis = li.css('div ul li')
+        li = lis[0]
+        original_language = li.css('a::text').get()
 
         yield {
             'url' : response.url,
