@@ -43,13 +43,25 @@ class MyImdbSpider(scrapy.Spider):
         audience = lis[1].xpath('string()').get()
         duration = lis[2].xpath('string()').get()
         # Score
-        score = 0
+        div = response.css('div[data-testid="hero-rating-bar__aggregate-rating__score"]')
+        spans = div[0].css('span')
+        score = spans[0].css('::text').get()
+        score = float(score.replace(',', '.'))
         # Genre
-        genre = 'genre'
+        genre = response.css('div.ipc-chip-list__scroller span::text').get()
         # Descriptions(synopsis)
-        plot = 'Plot'
+        plot = response.css('span[data-testid="plot-xl"]::text').get()
+        # Réalisteurs / Scénaristes / Acteurs(Casting principal)
+        li = response.css('li:contains("Réalisation")')
+        uls = li.css('ul')
+        lis = uls[0].css('li')
+        directors = []
+        for li in lis:
+            directors.append(li.css('a::text').get())
+        # Scénaristes
+        writers = 'writers'
         # Acteurs(Casting principal)
-        actors = 'actors'
+        stars = 'stars'
         # Pays
         country = 'country'
         # Langue d’origine
@@ -64,7 +76,9 @@ class MyImdbSpider(scrapy.Spider):
             'year' : year,
             'duration' : duration,
             'plot' : plot,
-            'actors' : actors,
+            'directors' : directors,
+            'writers' : writers,
+            'stars' : stars,
             'audience' : audience,
             'country' : country,
             'original_language' : original_language,
