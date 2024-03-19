@@ -1,4 +1,7 @@
 import scrapy
+import random
+import time
+from a_my_imdb.items import MovieItem
 
 
 # headers communs
@@ -20,14 +23,24 @@ class MyImdbSpider(scrapy.Spider):
     def parse(self, response):
         movies = response.css('li.ipc-metadata-list-summary-item')
 
+        movie_max = 1
+        i = 0
         for movie in movies:
+            i += 1
+
+            # Générer un délai aléatoire entre 1 et 3 secondes
+            delay = random.uniform(1, 3)
+            time.sleep(delay)
+
             movie_url = movie.css('a').attrib['href']
             # ou
             # movie_url = movie.css('a ::attr(href)').get()
-            yield response.follow(movie_url, callback=self.parse_movie_page, headers=common_headers)
-            break
+            yield response.follow(movie_url, callback=self.parse_movie_page, headers=common_headers, cb_kwargs={'movie_rank': i})
+            
+            if i >= movie_max and movie_max > 0:
+                break
     
-    def parse_movie_page(self, response):
+    def parse_movie_page(self, response, movie_rank):
         movie = response.css('section.ipc-page-section')
 
         # Titre
@@ -46,32 +59,32 @@ class MyImdbSpider(scrapy.Spider):
         div = response.css('div[data-testid="hero-rating-bar__aggregate-rating__score"]')
         spans = div[0].css('span')
         score = spans[0].css('::text').get()
-        score = float(score.replace(',', '.'))
         # Genre
         genre = response.css('div.ipc-chip-list__scroller span::text').get()
         # Descriptions(synopsis)
         plot = response.css('span[data-testid="plot-xl"]::text').get()
         # Réalisteurs / Scénaristes / Acteurs(Casting principal)
+        # Réalisteurs
         li = response.css('li:contains("Réalisation")')
         uls = li.css('ul')
         lis = uls[0].css('li')
-        directors = []
+        scrapy_directors = []
         for li in lis:
-            directors.append(li.css('a::text').get())
+            scrapy_directors.append(li.css('a::text').get())
         # Scénaristes
         li = response.css('li:contains("Scénario")')
         uls = li.css('ul')
         lis = uls[0].css('li')
-        writers = []
+        scrapy_writers = []
         for li in lis:
-            writers.append(li.css('a::text').get())
+            scrapy_writers.append(li.css('a::text').get())
         # Acteurs(Casting principal)
         li = response.css('li:contains("Casting principal")')
         uls = li.css('ul')
         lis = uls[0].css('li')
-        stars = []
+        scrapy_stars = []
         for li in lis:
-            stars.append(li.css('a::text').get())
+            scrapy_stars.append(li.css('a::text').get())
         # Pays
         li = response.css('li:contains("Pays d’origine")')
         lis = li.css('div ul li')
@@ -83,19 +96,22 @@ class MyImdbSpider(scrapy.Spider):
         li = lis[0]
         original_language = li.css('a::text').get()
 
-        yield {
-            'url' : response.url,
-            'title' : title,
-            'orignal_title': orignal_title,
-            'score' : score,
-            'genre' : genre,
-            'year' : year,
-            'duration' : duration,
-            'plot' : plot,
-            'directors' : directors,
-            'writers' : writers,
-            'stars' : stars,
-            'audience' : audience,
-            'country' : country,
-            'original_language' : original_language,
-        }
+        
+        movie_item = MovieItem()
+        movie_item['url'] = response.url
+        movie_item['movie_rank'] = movie_rank
+        movie_item['title'] = title
+        movie_item['orignal_title'] = orignal_title
+        movie_item['score'] = score
+        movie_item['genre'] = genre
+        movie_item['year'] = year
+        movie_item['duration'] = duration
+        movie_item['plot'] = plot
+        movie_item['scrapy_directors'] = scrapy_directors
+        movie_item['scrapy_writers'] = scrapy_writers
+        movie_item['scrapy_stars'] = scrapy_stars
+        movie_item['audience'] = audience
+        movie_item['country'] = country
+        movie_item['original_language'] = original_language
+
+        yield movie_item
