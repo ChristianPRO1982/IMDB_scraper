@@ -26,7 +26,7 @@ class MyImdbSpider(scrapy.Spider):
         ##############
         ##############
         ##############
-        movie_max = 1
+        movie_max = 0
         ##############
         ##############
         ##############
@@ -80,9 +80,13 @@ class MyImdbSpider(scrapy.Spider):
             score = spans[0].css('::text').get()
         except:
             score = None
-        # Genre
+        # Genres
         try:
-            genre = response.css('div.ipc-chip-list__scroller span::text').get()
+            # genre = response.css('div.ipc-chip-list__scroller span::text').get()
+            genres = response.css('div.ipc-chip-list__scroller span')
+            scrapy_genres = []
+            for genre in genres:
+                scrapy_genres.append(genre.css('span::text').get())
         except:
             genre = None
         # Descriptions(synopsis)
@@ -145,7 +149,7 @@ class MyImdbSpider(scrapy.Spider):
         movie_item['title'] = title
         movie_item['orignal_title'] = orignal_title
         movie_item['score'] = score
-        movie_item['genre'] = genre
+        movie_item['scrapy_genres'] = scrapy_genres
         movie_item['year'] = year
         movie_item['duration'] = duration
         movie_item['plot'] = plot

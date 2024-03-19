@@ -49,9 +49,9 @@ class AMyImdbPipeline:
         except:
             adapter['duration'] = 0
         
-        # Réalisteurs / Scénaristes / Acteurs(Casting principal)
+        # Genres / Réalisteurs / Scénaristes / Acteurs(Casting principal)
         # on transforme la liste en un string avec "|"
-        fields = ['scrapy_directors', 'scrapy_writers', 'scrapy_stars']
+        fields = ['scrapy_genres', 'scrapy_directors', 'scrapy_writers', 'scrapy_stars']
         for field in fields:
             values = adapter.get(field)
             value_str = ''
@@ -69,7 +69,7 @@ class SaveToMySQLPipeline:
     
     def __init__(self):
         print()
-        print(">>>>>>>>>>>CREATE<<<<<<<<<<<<<<<")
+        print(">>>>>>>>>>>INIT<<<<<<<<<<<<<<<")
         self.conn = mysql.connector.connect(
             host = 'localhost',
             user = 'root',
@@ -89,17 +89,17 @@ class SaveToMySQLPipeline:
         try:
             self.cur.execute("""
                                 INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
-                                                    genre, year, duration, plot, scrapy_directors,
+                                                    scrapy_genres, year, duration, plot, scrapy_directors,
                                                     scrapy_writers, scrapy_stars, audience, country, original_language)
                                             VALUES (%s, %s, %s, %s, %s,
                                                     %s, %s, %s, %s, %s,
                                                     %s, %s, %s, %s, %s)
                                 """,
                                 (item['url'],item['movie_rank'],item['title'],item['orignal_title'],item['score'],
-                                item['genre'],item['year'],item['duration'],item['plot'],item['scrapy_directors'],
+                                item['scrapy_genres'],item['year'],item['duration'],item['plot'],item['scrapy_directors'],
                                 item['scrapy_writers'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']))
-        except:
-            print()
+        except Exception as e:
+            print(e)
             print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')
             print('"' + item['title'] + '" est déjà en base [' + item['url'] + '].')
             print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')

@@ -1,7 +1,7 @@
 import scrapy
 import random
 import time
-from a_my_imdb.items import MovieItem
+from a_my_imdb.items import TVShowItem
 
 
 # headers communs
@@ -10,48 +10,47 @@ common_headers = {
     'Accept-Language': 'fr',
 }
 
-
-class MyImdbSpider(scrapy.Spider):
-    name = "my_imdb"
+class TvshowSpiderSpider(scrapy.Spider):
+    name = "tvshow_spider"
     allowed_domains = ["www.imdb.com"]
-    start_urls = ["https://www.imdb.com/chart/top/?ref_=nv_mv_250"]
+    start_urls = ["https://www.imdb.com/chart/toptv/?ref_=nv_tvv_250"]
 
     def start_requests(self):
         for url in self.start_urls:
             yield scrapy.Request(url, headers=common_headers)
 
     def parse(self, response):
-        movies = response.css('li.ipc-metadata-list-summary-item')
+        tvshows = response.css('li.ipc-metadata-list-summary-item')
 
         ##############
         ##############
         ##############
-        movie_max = 1
+        tvshow_max = 1
         ##############
         ##############
         ##############
         i = 0
-        for movie in movies:
+        for tvshow in tvshows:
             i += 1
 
             # Générer un délai aléatoire entre 1 et 3 secondes
             delay = random.uniform(1, 2)
             time.sleep(delay)
 
-            movie_url = movie.css('a').attrib['href']
+            tvshow_url = tvshow.css('a').attrib['href']
             # ou
-            # movie_url = movie.css('a ::attr(href)').get()
-            yield response.follow(movie_url, callback=self.parse_movie_page, headers=common_headers, cb_kwargs={'movie_rank': i})
+            # tvshow_url = tvshow.css('a ::attr(href)').get()
+            yield response.follow(tvshow_url, callback=self.parse_tvshow_page, headers=common_headers, cb_kwargs={'tvshow_rank': i})
             
-            if i >= movie_max and movie_max > 0:
+            if i >= tvshow_max and tvshow_max > 0:
                 break
     
-    def parse_movie_page(self, response, movie_rank):
-        movie = response.css('section.ipc-page-section')
+    def parse_tvshow_page(self, response, tvshow_rank):
+        tvshow = response.css('section.ipc-page-section')
 
         # Titre
         try:
-            title = movie.css('h1 span::text').get()
+            title = tvshow.css('h1 span::text').get()
         except:
             title = None
         # Titre original / Public / Durée
@@ -80,9 +79,13 @@ class MyImdbSpider(scrapy.Spider):
             score = spans[0].css('::text').get()
         except:
             score = None
-        # Genre
+        # Genres
         try:
-            genre = response.css('div.ipc-chip-list__scroller span::text').get()
+            # genre = response.css('div.ipc-chip-list__scroller span::text').get()
+            genres = response.css('div.ipc-chip-list__scroller span')
+            scrapy_genres = []
+            for genre in genres:
+                scrapy_genres.append(genre.css('span::text').get())
         except:
             genre = None
         # Descriptions(synopsis)
@@ -139,21 +142,22 @@ class MyImdbSpider(scrapy.Spider):
             original_language = None
 
         
-        movie_item = MovieItem()
-        movie_item['url'] = response.url
-        movie_item['movie_rank'] = movie_rank
-        movie_item['title'] = title
-        movie_item['orignal_title'] = orignal_title
-        movie_item['score'] = score
-        movie_item['genre'] = genre
-        movie_item['year'] = year
-        movie_item['duration'] = duration
-        movie_item['plot'] = plot
-        movie_item['scrapy_directors'] = scrapy_directors
-        movie_item['scrapy_writers'] = scrapy_writers
-        movie_item['scrapy_stars'] = scrapy_stars
-        movie_item['audience'] = audience
-        movie_item['country'] = country
-        movie_item['original_language'] = original_language
+        tvshow_item = TVShowItem()
+        tvshow_item['url'] = response.url
+        tvshow_item['tvshow_rank'] = tvshow_rank
+        tvshow_item['title'] = title
+        tvshow_item['orignal_title'] = orignal_title
+        tvshow_item['score'] = score
+        tvshow_item['scrapy_genres'] = scrapy_genres
+        tvshow_item['year_start'] = year
+        tvshow_item['year_stop'] = year
+        tvshow_item['duration'] = duration
+        tvshow_item['plot'] = plot
+        tvshow_item['scrapy_creators'] = scrapy_directors
+        tvshow_item['scrapy_stars'] = scrapy_stars
+        tvshow_item['audience'] = audience
+        tvshow_item['country'] = country
+        tvshow_item['original_language'] = original_language
 
-        yield movie_item
+        yield tvshow_item
+
