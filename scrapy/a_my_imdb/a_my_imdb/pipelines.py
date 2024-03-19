@@ -26,8 +26,11 @@ class AMyImdbPipeline:
         # lowercase
         lowercase_keys = ['genre', 'audience']
         for lowercase_key in lowercase_keys:
-            value = adapter.get(lowercase_key)
-            adapter[lowercase_key] = value.lower()
+            try:
+                value = adapter.get(lowercase_key)
+                adapter[lowercase_key] = value.lower()
+            except:
+                pass
         
         # numérical features hors "durée"
         numericalsfeatures = ['score']
@@ -65,6 +68,7 @@ class AMyImdbPipeline:
 class SaveToMySQLPipeline:
     
     def __init__(self):
+        print()
         print(">>>>>>>>>>>CREATE<<<<<<<<<<<<<<<")
         self.conn = mysql.connector.connect(
             host = 'localhost',
@@ -75,44 +79,31 @@ class SaveToMySQLPipeline:
 
         self.cur = self.conn.cursor()
 
-        self.cur.execute("DELETE FROM movies250;")
-        self.conn.commit()
-
-        # self.cur.execute("""
-        #                  CREATE TABLE IF NOT EXISTS movies250 (
-        #                     url varchar(255) NOT NULL,
-        #                     movie_rank SMALLINT NOT NULL,
-        #                     title varchar(150) NULL,
-        #                     orignal_title VARCHAR(150) NULL,
-        #                     score TINYINT NULL,
-        #                     genre VARCHAR(50) NULL,
-        #                     year SMALLINT NULL,
-        #                     duration SMALLINT NULL,
-        #                     plot TEXT NULL,
-        #                     scrapy_directors TEXT NULL,
-        #                     scrapy_writers TEXT NULL,
-        #                     scrapy_stars TEXT NULL,
-        #                     audience VARCHAR(50) NULL,
-        #                     country VARCHAR(50) NULL,
-        #                     original_language VARCHAR(50) NULL,
-        #                     CONSTRAINT movies250_pk PRIMARY KEY (url)
-        #                  )
-        #                  """)
+        # self.cur.execute("DELETE FROM movies250;")
+        # self.conn.commit()
         
 
     def process_item(self, item, spider):
+        print()
         print(">>>>>>>>>>>INSERT<<<<<<<<<<<<<<<")
-        self.cur.execute("""
-                            INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
-                                                genre, year, duration, plot, scrapy_directors,
-                                                scrapy_writers, scrapy_stars, audience, country, original_language)
-                                        VALUES (%s, %s, %s, %s, %s,
-                                                %s, %s, %s, %s, %s,
-                                                %s, %s, %s, %s, %s)
-                            """,
-                            (item['url'],item['movie_rank'],item['title'],item['orignal_title'],item['score'],
-                            item['genre'],item['year'],item['duration'],item['plot'],item['scrapy_directors'],
-                            item['scrapy_writers'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']))
+        try:
+            self.cur.execute("""
+                                INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
+                                                    genre, year, duration, plot, scrapy_directors,
+                                                    scrapy_writers, scrapy_stars, audience, country, original_language)
+                                            VALUES (%s, %s, %s, %s, %s,
+                                                    %s, %s, %s, %s, %s,
+                                                    %s, %s, %s, %s, %s)
+                                """,
+                                (item['url'],item['movie_rank'],item['title'],item['orignal_title'],item['score'],
+                                item['genre'],item['year'],item['duration'],item['plot'],item['scrapy_directors'],
+                                item['scrapy_writers'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']))
+        except:
+            print()
+            print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')
+            print('"' + item['title'] + '" est déjà en base [' + item['url'] + '].')
+            print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')
+            print()
         
         self.conn.commit()
         return item
