@@ -25,7 +25,7 @@ class TvshowSpiderSpider(scrapy.Spider):
         ##############
         ##############
         ##############
-        tvshow_max = 1
+        tvshow_max = 10
         ##############
         ##############
         ##############
@@ -47,7 +47,7 @@ class TvshowSpiderSpider(scrapy.Spider):
     
     def parse_tvshow_page(self, response, tvshow_rank):
         tvshow = response.css('section.ipc-page-section')
-
+        
         # Titre
         try:
             title = tvshow.css('h1 span::text').get()
@@ -56,7 +56,6 @@ class TvshowSpiderSpider(scrapy.Spider):
         # Titre original / Public / Durée
         try:
             divs = response.css('div:contains("Titre original")')
-            print(">>>len:",len(divs))
             _, orignal_title = divs[-1].xpath('text()').get().strip().split(':')
         except:
             orignal_title = None
@@ -65,9 +64,10 @@ class TvshowSpiderSpider(scrapy.Spider):
             div = response.xpath('//div[h1]')
             ul = div.css('ul')
             lis = ul.css('li')
-            year = lis[0].xpath('string()').get()
-            audience = lis[1].xpath('string()').get()
-            duration = lis[2].xpath('string()').get()
+            year = lis[1].xpath('string()').get()
+            year_start, year_stop = year.strip().split('–')
+            audience = lis[2].xpath('string()').get()
+            duration = lis[3].xpath('string()').get()
         except:
             year = None
             audience = None
@@ -93,27 +93,17 @@ class TvshowSpiderSpider(scrapy.Spider):
             plot = response.css('span[data-testid="plot-xl"]::text').get()
         except:
             plot = None
-        # Réalisteurs / Scénaristes / Acteurs(Casting principal)
-        # Réalisteurs
+        # Créateurs / Acteurs(Casting principal)
+        # Créateurs
         try:
-            li = response.css('li:contains("Réalisation")')
+            li = response.css('li:contains("Création")')
             uls = li.css('ul')
             lis = uls[0].css('li')
-            scrapy_directors = []
+            scrapy_creators = []
             for li in lis:
-                scrapy_directors.append(li.css('a::text').get())
+                scrapy_creators.append(li.css('a::text').get())
         except:
-            scrapy_directors = None
-        # Scénaristes
-        try:
-            li = response.css('li:contains("Scénario")')
-            uls = li.css('ul')
-            lis = uls[0].css('li')
-            scrapy_writers = []
-            for li in lis:
-                scrapy_writers.append(li.css('a::text').get())
-        except:
-            scrapy_writers = None
+            scrapy_creators = None
         # Acteurs(Casting principal)
         try:
             li = response.css('li:contains("Casting principal")')
@@ -149,11 +139,11 @@ class TvshowSpiderSpider(scrapy.Spider):
         tvshow_item['orignal_title'] = orignal_title
         tvshow_item['score'] = score
         tvshow_item['scrapy_genres'] = scrapy_genres
-        tvshow_item['year_start'] = year
-        tvshow_item['year_stop'] = year
+        tvshow_item['year_start'] = year_start
+        tvshow_item['year_stop'] = year_stop
         tvshow_item['duration'] = duration
         tvshow_item['plot'] = plot
-        tvshow_item['scrapy_creators'] = scrapy_directors
+        tvshow_item['scrapy_creators'] = scrapy_creators
         tvshow_item['scrapy_stars'] = scrapy_stars
         tvshow_item['audience'] = audience
         tvshow_item['country'] = country

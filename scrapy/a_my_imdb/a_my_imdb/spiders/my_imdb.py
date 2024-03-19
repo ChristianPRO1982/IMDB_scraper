@@ -57,7 +57,6 @@ class MyImdbSpider(scrapy.Spider):
         # Titre original / Public / Durée
         try:
             divs = response.css('div:contains("Titre original")')
-            print(">>>len:",len(divs))
             _, orignal_title = divs[-1].xpath('text()').get().strip().split(':')
         except:
             orignal_title = None

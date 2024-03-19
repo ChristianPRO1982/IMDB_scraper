@@ -64,7 +64,8 @@ ROBOTSTXT_OBEY = True
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    "a_my_imdb.pipelines.AMyImdbPipeline": 300,
-   "a_my_imdb.pipelines.SaveToMySQLPipeline": 400,
+   # "a_my_imdb.pipelines.SaveToMySQLPipeline": 400,
+   "a_my_imdb.pipelines.SaveToMySQLPipelineTVShow": 401,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

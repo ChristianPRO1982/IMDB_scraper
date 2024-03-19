@@ -44,22 +44,29 @@ class AMyImdbPipeline:
         # durée
         try:
             duration = adapter.get('duration')
-            hours, minutes = duration.split('h ')
+            try:
+                hours, minutes = duration.split('h ')
+            except:
+                hours = 0
+                minutes = duration
             adapter['duration'] = int(hours) * 60 + int(minutes.replace('min', ''))
         except:
             adapter['duration'] = 0
         
         # Genres / Réalisteurs / Scénaristes / Acteurs(Casting principal)
         # on transforme la liste en un string avec "|"
-        fields = ['scrapy_genres', 'scrapy_directors', 'scrapy_writers', 'scrapy_stars']
+        fields = ['scrapy_genres', 'scrapy_directors', 'scrapy_writers', 'scrapy_stars', 'scrapy_creators']
         for field in fields:
-            values = adapter.get(field)
-            value_str = ''
-            pipe = ''
-            for value in values:
-                value_str += pipe + value
-                pipe = '|'
-            adapter[field] = value_str
+            try:
+                values = adapter.get(field)
+                value_str = ''
+                pipe = ''
+                for value in values:
+                    value_str += pipe + value
+                    pipe = '|'
+                adapter[field] = value_str
+            except:
+                pass
 
 
         return item
@@ -69,7 +76,7 @@ class SaveToMySQLPipeline:
     
     def __init__(self):
         print()
-        print(">>>>>>>>>>>INIT<<<<<<<<<<<<<<<")
+        print(">>>>>>>>>>>INIT MOVIES<<<<<<<<<<<<<<<")
         self.conn = mysql.connector.connect(
             host = 'localhost',
             user = 'root',
@@ -85,7 +92,7 @@ class SaveToMySQLPipeline:
 
     def process_item(self, item, spider):
         print()
-        print(">>>>>>>>>>>INSERT<<<<<<<<<<<<<<<")
+        print(">>>>>>>>>>>INSERT MOVIE<<<<<<<<<<<<<<<")
         try:
             self.cur.execute("""
                                 INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
@@ -98,6 +105,55 @@ class SaveToMySQLPipeline:
                                 (item['url'],item['movie_rank'],item['title'],item['orignal_title'],item['score'],
                                 item['scrapy_genres'],item['year'],item['duration'],item['plot'],item['scrapy_directors'],
                                 item['scrapy_writers'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']))
+        except Exception as e:
+            print(e)
+            print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')
+            print('"' + item['title'] + '" est déjà en base [' + item['url'] + '].')
+            print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')
+            print()
+        
+        self.conn.commit()
+        return item
+    
+
+    def close_spider(self, spider):
+        self.cur.close()
+        self.conn.close()
+
+
+class SaveToMySQLPipelineTVShow:
+    
+    def __init__(self):
+        print()
+        print(">>>>>>>>>>>INIT TV SHOWS<<<<<<<<<<<<<<<")
+        self.conn = mysql.connector.connect(
+            host = 'localhost',
+            user = 'root',
+            password = 'azertyuiop',
+            database = 'my_imdb'
+        )
+
+        self.cur = self.conn.cursor()
+
+        # self.cur.execute("DELETE FROM tv_shows250;")
+        # self.conn.commit()
+        
+
+    def process_item(self, item, spider):
+        print()
+        print(">>>>>>>>>>>INSERT TV SHOW<<<<<<<<<<<<<<<")
+        try:
+            self.cur.execute("""
+                                INSERT INTO tv_shows250 (url, tvshow_rank, title, orignal_title, score,
+                                                    scrapy_genres, year_start, year_stop, duration, plot,
+                                                    scrapy_creators, scrapy_stars, audience, country, original_language)
+                                            VALUES (%s, %s, %s, %s, %s,
+                                                    %s, %s, %s, %s, %s,
+                                                    %s, %s, %s, %s, %s)
+                                """,
+                                (item['url'],item['tvshow_rank'],item['title'],item['orignal_title'],item['score'],
+                                item['scrapy_genres'],item['year_start'],item['year_stop'],item['duration'],item['plot'],
+                                item['scrapy_creators'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']))
         except Exception as e:
             print(e)
             print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')

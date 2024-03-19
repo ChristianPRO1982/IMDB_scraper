@@ -34,7 +34,7 @@ class MovieItem(scrapy.Item):
 
 class TVShowItem(scrapy.Item):
     url = scrapy.Field()
-    movie_rank = scrapy.Field()
+    tvshow_rank = scrapy.Field()
     title = scrapy.Field()
     orignal_title = scrapy.Field()
     score = scrapy.Field(serialize=serialize_score)
