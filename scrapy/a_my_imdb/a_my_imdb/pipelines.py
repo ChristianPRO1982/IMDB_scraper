@@ -7,6 +7,7 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 import mysql.connector
+import re
 
 
 class AMyImdbPipeline:
@@ -32,7 +33,22 @@ class AMyImdbPipeline:
             except:
                 pass
         
-        # numérical features hors "durée"
+        # budget, gross_worldwide
+        budgets = ['budget', 'gross_worldwide']
+        try:
+            for budget in budgets:
+                try:
+                    value = adapter.get(budget)
+                    value = re.search(r'\b(\d[\d ]*)\b', value)
+                    value = value.group(1)
+                    value = value.replace('\u202F', '') # Remplacer les espaces insécables (Unicode U+202F) par des espaces normaux
+                    adapter[budget] = value
+                except:
+                    adapter[budget] = 'NULL'
+        except:
+            pass
+        
+        # numérical features hors "durée" et  box office
         numericalsfeatures = ['score']
         for numericalfeature in numericalsfeatures:
             value = adapter.get(numericalfeature)
@@ -44,12 +60,15 @@ class AMyImdbPipeline:
         # durée
         try:
             duration = adapter.get('duration')
-            try:
-                hours, minutes = duration.split('h ')
-            except:
-                hours = 0
-                minutes = duration
-            adapter['duration'] = int(hours) * 60 + int(minutes.replace('min', ''))
+            if "h" in duration or "min" in duration:
+                try:
+                    hours, minutes = duration.split('h ')
+                except:
+                    hours = 0
+                    minutes = duration
+                adapter['duration'] = int(hours) * 60 + int(minutes.replace('min', ''))
+            else:
+                adapter['duration'] = 0
         except:
             adapter['duration'] = 0
         
@@ -67,7 +86,30 @@ class AMyImdbPipeline:
                 adapter[field] = value_str
             except:
                 pass
-
+        
+        # year_stop
+        try:
+            year_stop = adapter.get('year_stop')
+            if year_stop.strip() == '':
+                adapter['year_stop'] = 'NULL'
+        except:
+            pass
+        
+        # gestion des des "'" et des NULL
+        fields_text = ['url', 'title', 'orignal_title', 'scrapy_genres', 'plot',
+                       'scrapy_directors', 'scrapy_writers', 'scrapy_creators', 'scrapy_stars', 'audience',
+                       'country', 'original_language', 'budget', 'gross_worldwide']
+        for field_text in fields_text:
+            try:
+                value = adapter.get(field_text)
+                if field_text == 'audience':
+                    if value is None:
+                        adapter[field_text] = '"NULL"'
+                if value != 'NULL':
+                    adapter[field_text] = '"' + value.replace('"', "''") + '"'
+                
+            except:
+                pass
 
         return item
 
@@ -94,17 +136,22 @@ class SaveToMySQLPipeline:
         print()
         print(">>>>>>>>>>>INSERT MOVIE<<<<<<<<<<<<<<<")
         try:
-            self.cur.execute("""
-                                INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
-                                                    scrapy_genres, year, duration, plot, scrapy_directors,
-                                                    scrapy_writers, scrapy_stars, audience, country, original_language)
-                                            VALUES (%s, %s, %s, %s, %s,
-                                                    %s, %s, %s, %s, %s,
-                                                    %s, %s, %s, %s, %s)
-                                """,
-                                (item['url'],item['movie_rank'],item['title'],item['orignal_title'],item['score'],
-                                item['scrapy_genres'],item['year'],item['duration'],item['plot'],item['scrapy_directors'],
-                                item['scrapy_writers'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']))
+            url,movie_rank,title,orignal_title,score = item['url'],item['movie_rank'],item['title'],item['orignal_title'],item['score']
+            scrapy_genres,year,duration,plot,scrapy_directors = item['scrapy_genres'],item['year'],item['duration'],item['plot'],item['scrapy_directors']
+            scrapy_writers,scrapy_stars,audience,country,original_language = item['scrapy_writers'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']
+            budget,gross_worldwide = item['budget'],item['gross_worldwide']
+            request = f"""
+INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
+                    scrapy_genres, year, duration, plot, scrapy_directors,
+                    scrapy_writers, scrapy_stars, audience, country, original_language,
+                    budget, gross_worldwide)
+            VALUES ({url}, {movie_rank}, {title}, {orignal_title}, {score},
+                    {scrapy_genres}, {year}, {duration}, {plot}, {scrapy_directors},
+                    {scrapy_writers}, {scrapy_stars}, {audience}, {country}, {original_language},
+                    {budget}, {gross_worldwide})
+"""
+            print("request=",request)
+            self.cur.execute(request)
         except Exception as e:
             print(e)
             print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')
@@ -143,17 +190,20 @@ class SaveToMySQLPipelineTVShow:
         print()
         print(">>>>>>>>>>>INSERT TV SHOW<<<<<<<<<<<<<<<")
         try:
-            self.cur.execute("""
-                                INSERT INTO tv_shows250 (url, tvshow_rank, title, orignal_title, score,
-                                                    scrapy_genres, year_start, year_stop, duration, plot,
-                                                    scrapy_creators, scrapy_stars, audience, country, original_language)
-                                            VALUES (%s, %s, %s, %s, %s,
-                                                    %s, %s, %s, %s, %s,
-                                                    %s, %s, %s, %s, %s)
-                                """,
-                                (item['url'],item['tvshow_rank'],item['title'],item['orignal_title'],item['score'],
-                                item['scrapy_genres'],item['year_start'],item['year_stop'],item['duration'],item['plot'],
-                                item['scrapy_creators'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']))
+            url,tvshow_rank,title,orignal_title,score = item['url'],item['tvshow_rank'],item['title'],item['orignal_title'],item['score']
+            scrapy_genres,year_start,year_stop,duration,plot = item['scrapy_genres'],item['year_start'],item['year_stop'],item['duration'],item['plot']
+            scrapy_creators,scrapy_stars,audience,country,original_language = item['scrapy_creators'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']
+
+            request = f"""
+INSERT INTO tv_shows250 (url, tvshow_rank, title, orignal_title, score,
+                    scrapy_genres, year_start, year_stop, duration, plot,
+                    scrapy_creators, scrapy_stars, audience, country, original_language)
+            VALUES ({url}, {tvshow_rank}, {title}, {orignal_title}, {score},
+                    {scrapy_genres}, {year_start}, {year_stop}, {duration}, {plot},
+                    {scrapy_creators}, {scrapy_stars}, {audience}, {country}, {original_language})
+"""
+            print("request=",request)
+            self.cur.execute(request)
         except Exception as e:
             print(e)
             print('§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§')

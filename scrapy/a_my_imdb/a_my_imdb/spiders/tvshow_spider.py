@@ -22,13 +22,13 @@ class TvshowSpiderSpider(scrapy.Spider):
     def parse(self, response):
         tvshows = response.css('li.ipc-metadata-list-summary-item')
 
-        ##############
-        ##############
-        ##############
-        tvshow_max = 10
-        ##############
-        ##############
-        ##############
+        ###############
+        ###############
+        ###############
+        tvshow_max = 0
+        ###############
+        ###############
+        ###############
         i = 0
         for tvshow in tvshows:
             i += 1
@@ -52,33 +52,44 @@ class TvshowSpiderSpider(scrapy.Spider):
         try:
             title = tvshow.css('h1 span::text').get()
         except:
-            title = None
+            title = "NULL"
         # Titre original / Public / Durée
         try:
             divs = response.css('div:contains("Titre original")')
             _, orignal_title = divs[-1].xpath('text()').get().strip().split(':')
         except:
-            orignal_title = None
-        # Année / Public / Durée
+            orignal_title = "NULL"
+        # Durée
         try:
             div = response.xpath('//div[h1]')
             ul = div.css('ul')
             lis = ul.css('li')
-            year = lis[1].xpath('string()').get()
-            year_start, year_stop = year.strip().split('–')
-            audience = lis[2].xpath('string()').get()
-            duration = lis[3].xpath('string()').get()
+            duration = lis[-1].xpath('string()').get()
         except:
-            year = None
-            audience = None
-            duration = None
+            duration = "NULL"
+        # Années
+        try:
+            year = response.css('a[href*="/releaseinfo?"]::text').get()
+            try:
+                year_start, year_stop = year.strip().split('–')
+            except:
+                year_start = year
+                year_stop = "NULL"
+        except:
+            year_start = "NULL"
+            year_stop = "NULL"
+        # Public
+        try:
+            audience = response.css('a[href*="/certificates?"]::text').get()
+        except:
+            audience = "NULL"
         # Score
         try:
             div = response.css('div[data-testid="hero-rating-bar__aggregate-rating__score"]')
             spans = div[0].css('span')
             score = spans[0].css('::text').get()
         except:
-            score = None
+            score = "NULL"
         # Genres
         try:
             # genre = response.css('div.ipc-chip-list__scroller span::text').get()
@@ -87,12 +98,12 @@ class TvshowSpiderSpider(scrapy.Spider):
             for genre in genres:
                 scrapy_genres.append(genre.css('span::text').get())
         except:
-            genre = None
+            genre = "NULL"
         # Descriptions(synopsis)
         try:
             plot = response.css('span[data-testid="plot-xl"]::text').get()
         except:
-            plot = None
+            plot = ""
         # Créateurs / Acteurs(Casting principal)
         # Créateurs
         try:
@@ -103,7 +114,7 @@ class TvshowSpiderSpider(scrapy.Spider):
             for li in lis:
                 scrapy_creators.append(li.css('a::text').get())
         except:
-            scrapy_creators = None
+            scrapy_creators = ["NULL"]
         # Acteurs(Casting principal)
         try:
             li = response.css('li:contains("Casting principal")')
@@ -113,7 +124,7 @@ class TvshowSpiderSpider(scrapy.Spider):
             for li in lis:
                 scrapy_stars.append(li.css('a::text').get())
         except:
-            scrapy_stars = None
+            scrapy_stars = ["NULL"]
         # Pays
         try:
             li = response.css('li:contains("Pays d’origine")')
@@ -121,7 +132,7 @@ class TvshowSpiderSpider(scrapy.Spider):
             li = lis[0]
             country = li.css('a::text').get()
         except:
-            country = None
+            country = "NULL"
         # Langue d’origine
         try:
             li = response.css('li:contains("Langue")')
@@ -129,7 +140,7 @@ class TvshowSpiderSpider(scrapy.Spider):
             li = lis[0]
             original_language = li.css('a::text').get()
         except:
-            original_language = None
+            original_language = "NULL"
 
         
         tvshow_item = TVShowItem()

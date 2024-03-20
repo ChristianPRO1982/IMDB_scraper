@@ -53,13 +53,13 @@ class MyImdbSpider(scrapy.Spider):
         try:
             title = movie.css('h1 span::text').get()
         except:
-            title = None
+            title = "NULL"
         # Titre original / Public / Durée
         try:
             divs = response.css('div:contains("Titre original")')
             _, orignal_title = divs[-1].xpath('text()').get().strip().split(':')
         except:
-            orignal_title = None
+            orignal_title = "NULL"
         # Année / Public / Durée
         try:
             div = response.xpath('//div[h1]')
@@ -69,16 +69,16 @@ class MyImdbSpider(scrapy.Spider):
             audience = lis[1].xpath('string()').get()
             duration = lis[2].xpath('string()').get()
         except:
-            year = None
-            audience = None
-            duration = None
+            year = "NULL"
+            audience = "NULL"
+            duration = "NULL"
         # Score
         try:
             div = response.css('div[data-testid="hero-rating-bar__aggregate-rating__score"]')
             spans = div[0].css('span')
             score = spans[0].css('::text').get()
         except:
-            score = None
+            score = "NULL"
         # Genres
         try:
             # genre = response.css('div.ipc-chip-list__scroller span::text').get()
@@ -87,12 +87,12 @@ class MyImdbSpider(scrapy.Spider):
             for genre in genres:
                 scrapy_genres.append(genre.css('span::text').get())
         except:
-            genre = None
+            genre = "NULL"
         # Descriptions(synopsis)
         try:
             plot = response.css('span[data-testid="plot-xl"]::text').get()
         except:
-            plot = None
+            plot = "NULL"
         # Réalisteurs / Scénaristes / Acteurs(Casting principal)
         # Réalisteurs
         try:
@@ -103,7 +103,7 @@ class MyImdbSpider(scrapy.Spider):
             for li in lis:
                 scrapy_directors.append(li.css('a::text').get())
         except:
-            scrapy_directors = None
+            scrapy_directors = "NULL"
         # Scénaristes
         try:
             li = response.css('li:contains("Scénario")')
@@ -113,7 +113,7 @@ class MyImdbSpider(scrapy.Spider):
             for li in lis:
                 scrapy_writers.append(li.css('a::text').get())
         except:
-            scrapy_writers = None
+            scrapy_writers = "NULL"
         # Acteurs(Casting principal)
         try:
             li = response.css('li:contains("Casting principal")')
@@ -123,7 +123,7 @@ class MyImdbSpider(scrapy.Spider):
             for li in lis:
                 scrapy_stars.append(li.css('a::text').get())
         except:
-            scrapy_stars = None
+            scrapy_stars = "NULL"
         # Pays
         try:
             li = response.css('li:contains("Pays d’origine")')
@@ -131,7 +131,7 @@ class MyImdbSpider(scrapy.Spider):
             li = lis[0]
             country = li.css('a::text').get()
         except:
-            country = None
+            country = "NULL"
         # Langue d’origine
         try:
             li = response.css('li:contains("Langue")')
@@ -139,7 +139,19 @@ class MyImdbSpider(scrapy.Spider):
             li = lis[0]
             original_language = li.css('a::text').get()
         except:
-            original_language = None
+            original_language = "NULL"
+        # Budget / recette mondiale
+        try:
+            box_office = response.css('section[data-testid="BoxOffice"]')
+            li = box_office.css('li:contains("Budget")')
+            spans = li.css('span::text')
+            budget = spans[1].get()
+            li = box_office.css('li:contains("Montant brut mondial")')
+            spans = li.css('span::text')
+            gross_worldwide = spans[1].get()
+        except:
+            budget = "NULL"
+            gross_worldwide = "NULL"
 
         
         movie_item = MovieItem()
@@ -158,5 +170,7 @@ class MyImdbSpider(scrapy.Spider):
         movie_item['audience'] = audience
         movie_item['country'] = country
         movie_item['original_language'] = original_language
+        movie_item['budget'] = budget
+        movie_item['gross_worldwide'] = gross_worldwide
 
         yield movie_item

@@ -31,6 +31,8 @@ class MovieItem(scrapy.Item):
     audience = scrapy.Field()
     country = scrapy.Field()
     original_language = scrapy.Field()
+    budget = scrapy.Field()
+    gross_worldwide = scrapy.Field()
 
 class TVShowItem(scrapy.Item):
     url = scrapy.Field()

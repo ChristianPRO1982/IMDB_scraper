@@ -147,7 +147,7 @@ CREATE TABLE `movies250` (
   `movie_rank` smallint NOT NULL,
   `title` varchar(150) DEFAULT NULL,
   `orignal_title` varchar(150) DEFAULT NULL,
-  `score` tinyint DEFAULT NULL,
+  `score` decimal(10,1) DEFAULT NULL,
   `scrapy_genres` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
   `year` smallint DEFAULT NULL,
   `duration` smallint DEFAULT NULL,
@@ -158,6 +158,8 @@ CREATE TABLE `movies250` (
   `audience` varchar(50) DEFAULT NULL,
   `country` varchar(50) DEFAULT NULL,
   `original_language` varchar(50) DEFAULT NULL,
+  `budget` bigint DEFAULT NULL,
+  `gross_worldwide` bigint DEFAULT NULL,
   PRIMARY KEY (`url`),
   UNIQUE KEY `movies250_unique` (`movie_rank`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -323,7 +325,7 @@ CREATE TABLE `tv_shows250` (
   `tvshow_rank` smallint NOT NULL,
   `title` varchar(150) DEFAULT NULL,
   `orignal_title` varchar(150) DEFAULT NULL,
-  `score` tinyint DEFAULT NULL,
+  `score` decimal(10,1) DEFAULT NULL,
   `scrapy_genres` text,
   `year_start` smallint DEFAULT NULL,
   `year_stop` smallint DEFAULT NULL,
@@ -529,4 +531,4 @@ CREATE TABLE `writers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-03-19 16:26:25
+-- Dump completed on 2024-03-20 13:57:33
