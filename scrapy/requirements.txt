@@ -1,2 +1,4 @@
 Scrapy<3
 ipython<9
+selenium<5
+pandas<3

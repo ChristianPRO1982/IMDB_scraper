@@ -140,6 +140,7 @@ class SaveToMySQLPipeline:
             scrapy_genres,year,duration,plot,scrapy_directors = item['scrapy_genres'],item['year'],item['duration'],item['plot'],item['scrapy_directors']
             scrapy_writers,scrapy_stars,audience,country,original_language = item['scrapy_writers'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']
             budget,gross_worldwide = item['budget'],item['gross_worldwide']
+            
             request = f"""
 INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
                     scrapy_genres, year, duration, plot, scrapy_directors,
@@ -150,6 +151,7 @@ INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
                     {scrapy_writers}, {scrapy_stars}, {audience}, {country}, {original_language},
                     {budget}, {gross_worldwide})
 """
+            
             print("request=",request)
             self.cur.execute(request)
         except Exception as e:

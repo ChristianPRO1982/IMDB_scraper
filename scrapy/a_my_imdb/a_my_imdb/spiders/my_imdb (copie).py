@@ -7,8 +7,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
-
 
 
 # headers communs
@@ -22,31 +20,7 @@ class MyImdbSpider(scrapy.Spider):
     name = "my_imdb"
     allowed_domains = ["www.imdb.com"]
     # start_urls = ["https://www.imdb.com/chart/top/?ref_=nv_mv_250"]
-    start_urls = [
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=romance",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=sci-fi",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=short",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=sport",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=thriller",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=war",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=western",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=action",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=adventure",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=animation",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=biography",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=comedy",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=crime",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=documentary",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=drama",
-                  "https://www.imdb.com/search/title/?title_type=feature&genres=family",
-                  "https://www.imdb.com/search/title/?title_type=feature&genres=fantasy",
-                  "https://www.imdb.com/search/title/?title_type=feature&genres=film-noir",
-                  "https://www.imdb.com/search/title/?title_type=feature&genres=history",
-                  "https://www.imdb.com/search/title/?title_type=feature&genres=horror",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=music",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=musical",
-                #   "https://www.imdb.com/search/title/?title_type=feature&genres=mystery"
-                  ]
+    start_urls = ["https://www.imdb.com/search/title/?title_type=feature&genres=action"]
 
     def start_requests(self):
         for url in self.start_urls:
@@ -56,40 +30,37 @@ class MyImdbSpider(scrapy.Spider):
         # Initialiser le navigateur Selenium
         driver = webdriver.Chrome()
         driver.get(response.url)
-        
+
         # Attendre que les éléments chargent
         WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li.ipc-metadata-list-summary-item')))
-        
-        for i in range(20):
-            
-
-            # Vérifier s'il y a un bouton pour charger plus de films
-            load_more_button = driver.find_element(By.CSS_SELECTOR, 'button.ipc-see-more__button')
-
-            # Cliquer sur le bouton s'il est présent
-            if load_more_button.is_displayed():
-                actions = ActionChains(driver)
-                actions.move_to_element(load_more_button).click().perform()
-                driver.execute_script("arguments[0].click();", load_more_button)
-                delay = random.uniform(1, 2)
-                time.sleep(delay)
-            else:
-                break  # Sortir de la boucle s'il n'y a plus de bouton à cliquer
-        
-        # Maintenant, vous pouvez extraire les informations des films avec Selenium
-        movies = driver.find_elements(By.CSS_SELECTOR, 'li.ipc-metadata-list-summary-item')
-        i = 0
-        for movie in movies:
-            i += 1
-            print()
-            print('>>>>> MOVIE <<<<< ',i)
-            movie_url_element = movie.find_element(By.CSS_SELECTOR, 'a')
-            movie_url = movie_url_element.get_attribute('href')
-            yield scrapy.Request(movie_url, callback=self.parse_movie_page, headers=common_headers, cb_kwargs={'movie_rank': 0})
 
         # Fermer le navigateur Selenium une fois le scraping terminé
         driver.quit()
 
+        movies = response.css('li.ipc-metadata-list-summary-item')
+
+        ##############
+        ##############
+        ##############
+        movie_max = 1
+        ##############
+        ##############
+        ##############
+        i = 0
+        for movie in movies:
+            i += 1
+
+            # Générer un délai aléatoire entre 1 et 3 secondes
+            delay = random.uniform(1, 2)
+            time.sleep(delay)
+
+            movie_url = movie.css('a').attrib['href']
+            # ou
+            # movie_url = movie.css('a ::attr(href)').get()
+            yield response.follow(movie_url, callback=self.parse_movie_page, headers=common_headers, cb_kwargs={'movie_rank': 0})
+            
+            if i >= movie_max and movie_max > 0:
+                break
     
     def parse_movie_page(self, response, movie_rank):
         movie = response.css('section.ipc-page-section')
