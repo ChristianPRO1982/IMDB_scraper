@@ -160,8 +160,7 @@ CREATE TABLE `movies250` (
   `original_language` varchar(50) DEFAULT NULL,
   `budget` bigint DEFAULT NULL,
   `gross_worldwide` bigint DEFAULT NULL,
-  PRIMARY KEY (`url`),
-  UNIQUE KEY `movies250_unique` (`movie_rank`)
+  PRIMARY KEY (`url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -531,4 +530,4 @@ CREATE TABLE `writers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-03-20 13:57:33
+-- Dump completed on 2024-03-21 12:01:22
