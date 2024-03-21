@@ -1,3 +1,12 @@
+# SPIDER pour récupérer les films à partir de l'url des 250 meilleurs films ou à partir des urls "films par genres"
+# le spider récupères les données en français :
+# plus de champs à récupérer commen le titre original
+# sélection dans le header de la langue FR
+
+# utilisation de selenium car les pages "films par genre" sont des pages avec un bouton JS par afficher 50 films en plus
+# sur la même page
+# la méthode "parse_movie_page" est du scrapy plus classique (sans selenium)
+
 import scrapy
 import random
 import time
@@ -60,9 +69,9 @@ class MyImdbSpider(scrapy.Spider):
         # Attendre que les éléments chargent
         WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'li.ipc-metadata-list-summary-item')))
         
+        # on clique que 20 fois sur le bouton "50 films en plus"
+        # pour éviter d'être ban en scrapant trop de pages
         for i in range(20):
-            
-
             # Vérifier s'il y a un bouton pour charger plus de films
             load_more_button = driver.find_element(By.CSS_SELECTOR, 'button.ipc-see-more__button')
 

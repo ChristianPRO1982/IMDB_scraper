@@ -9,6 +9,18 @@ Assurez-vous d'avoir les éléments suivants installés avant de commencer :
 - Python (version recommandée : 3.x)
 - MySQL (avec les autorisations nécessaires pour créer une base de données)
 
+## Spiders
+
+Il y a deux spiders :
+
+- my_imdb : spider pour récupérer les films
+- tvshow_spider : pour récupérer les séries (uniquement les 250 meilleures)
+
+## BDD
+
+- DB_model.png : shéma de la BDD
+- dump_my_imdb.sql : code de la BDD (création des tables / triggers / foreign keys / etc.)
+
 ## Installation
 
 1. Cloner ce dépôt sur votre machine locale :

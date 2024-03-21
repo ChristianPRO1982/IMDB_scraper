@@ -1,10 +1,8 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+# 3 pipelines
+# -1 : AMyImdbPipeline : pour nettoyer films et séries
+# -2 : SaveToMySQLPipeline : envoi vers la BDD des films
+# -3 : SaveToMySQLPipelineTVShow : envoi vers la BDD des films
 
-
-# useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 import mysql.connector
 import re
@@ -117,6 +115,7 @@ class AMyImdbPipeline:
 class SaveToMySQLPipeline:
     
     def __init__(self):
+        # connexion à la BDD
         print()
         print(">>>>>>>>>>>INIT MOVIES<<<<<<<<<<<<<<<")
         self.conn = mysql.connector.connect(
@@ -141,6 +140,9 @@ class SaveToMySQLPipeline:
             scrapy_writers,scrapy_stars,audience,country,original_language = item['scrapy_writers'],item['scrapy_stars'],item['audience'],item['country'],item['original_language']
             budget,gross_worldwide = item['budget'],item['gross_worldwide']
             
+            # on insert les données dans une seule table "movies250"
+            # des champs tampons commence par "scrapy_"
+            # les valeurs hydrateront les autres tables par le trigger d'INSERT
             request = f"""
 INSERT INTO movies250 (url, movie_rank, title, orignal_title, score,
                     scrapy_genres, year, duration, plot, scrapy_directors,
